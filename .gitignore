@@ -4,3 +4,4 @@ drive_cli_venv
 github_account_token
 output.txt
 token.pickle
+credentials.json
