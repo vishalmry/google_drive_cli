@@ -1,6 +1,8 @@
 import auth
 import json
 import io
+from apiclient import http
+from apiclient import errors
 from apiclient.http import MediaIoBaseDownload
 
 "The first thing to do now is to send and get an http response"
@@ -37,7 +39,7 @@ def search_file(file_name) :
 
         files = files["files"]
         for individual_files in files:
-            if (individual_files['name'] == file_name) :
+            if (file_name in individual_files['name']) :
                 return individual_files['id']
 
         if page_token is None:
@@ -49,15 +51,24 @@ def download_file(file_name) :
     if get_ID is None :
         print ("The file does not exists")
         return
-    print (get_ID)
+
     response_recieved = drive_service.files().get_media(fileId = get_ID)
-    print ('till here')
     fh = io.BytesIO()
-    downloader = MediaIoBaseDownload(fh, response_recieved)
+    downloader = http.MediaIoBaseDownload(fh, response_recieved)
+
+    # Download the file
     done = False
     while done is False:
-        status, done = downloader.next_chunk()
-        print ("Download %d%%." % int(status.progress() * 100))
+        try:
+            status, done = downloader.next_chunk()
+        except errors.HttpError:
+            print ('An error occurred')
+        if status:
+            print ('Download Progress: %d%%' % int(status.progress() * 100))
+        if done:
+            print ("Download %d%%." % int(status.progress() * 100))
+        with open(file_name, 'wb') as downloaded_file:
+            downloaded_file.write(fh.getvalue())
 
 download_file('IDM 6.27 Build 2 Registered (32bit + 64bit Patch) [CrackingPatching].rar')
 
