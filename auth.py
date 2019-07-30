@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
 from __future__ import print_function
 import pickle
 import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+import requests
+import os
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -34,5 +37,21 @@ def main():
     service = build('drive', 'v3', credentials=creds)
     return service
 
-# if __name__ == '__main__':
-    # main()
+def logout() :
+    creds = None
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+
+    if not creds or not creds.valid:
+        print ('User not logged in')
+
+    else :
+        requests.post('https://accounts.google.com/o/oauth2/revoke',
+                      params = {'token': creds.refresh_token},
+                      headers = {'content-type': 'application/x-www-form-urlencoded'})
+
+        os.remove('token.pickle')
+
+if __name__ == '__main__':
+    main()
